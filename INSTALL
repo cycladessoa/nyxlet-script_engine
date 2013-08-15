@@ -1,0 +1,9 @@
+
+----------------------------------------------------
+Pre-requisites (One time setup)
+----------------------------------------------------
+1. Goto 'http://gradle.org/downloads' and download the latest release of Gradle
+
+2. Unzip it to your system. Setup a GRADLE_HOME environment variable and add it to the PATH
+   (i.e.: PATH=%PATH%;%GRADLE_HOME%\bin)
+   Detail installation instruction can be found at http://gradle.org/docs/current/userguide/installation.html

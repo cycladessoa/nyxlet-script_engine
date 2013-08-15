@@ -1,0 +1,225 @@
+/*******************************************************************************
+ * Copyright (c) 2012, THE BOARD OF TRUSTEES OF THE LELAND STANFORD JUNIOR UNIVERSITY
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ *    Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *    Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *    Neither the name of the STANFORD UNIVERSITY nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *******************************************************************************/
+
+/*******************************************************************************
+ *                          Message Queue Targets 
+ *
+ * Currently Supported Message Queues:
+ * - RabbitMQ
+ * - ActiveMQ
+ *
+ * This following targets are configured to access a Message Queue instance running on
+ * the "localhost". Please modify the "connection_string" fields in the following
+ * consumer and producer JSON configurations to point to a Message Queue instance 
+ * located on another machine. You must have a Message Queue instance up to run 
+ * these targets. You can also modify the queue names, for example, if your
+ * producerJSON configuration is pointing to a queue consumed by a Cyclades 
+ * Engine instance, the "javaXSTROMAProducerTargetExample" target example
+ * essientially becomes your Cyclades client (so, instead of using HTTP, you 
+ * are using the asynchronous Message Queue targets and drivers as your transport
+ * mechanism).
+ * 
+ * To run these targets and simply produce and consume messages:
+ * - Install one of the supported Message Queues on the localhost (the machine that you will
+ *  be running these examples from
+ * - Run any of the producer targets to produce messages to the designated queue
+ * - Run any of the consumer targets to consume messages from the designated queue
+ ******************************************************************************/
+
+String rabbitMQConnectionString = "amqp://guest:guest@localhost:5672"
+String rabbitMQProducerClass = "org.cyclades.nyxlet.servicebrokernyxlet.message.impl.rabbitmq.RawProducer"
+String rabbitMQConsumerClass = "org.cyclades.nyxlet.servicebrokernyxlet.message.impl.rabbitmq.Consumer"
+
+String activeMQConnectionString = "tcp://localhost:61616"
+String activeMQProducerClass = "org.cyclades.nyxlet.servicebrokernyxlet.message.impl.activemq.RawProducer"
+String activeMQConsumerClass = "org.cyclades.nyxlet.servicebrokernyxlet.message.impl.activemq.Consumer"
+
+def getProducerJSON (String connectionString) {
+    String producerJSON = "{" \
+        + "\"pool\": \"true\"," \
+        + "\"maxActive\": \"5\"," \
+        + "\"target_queue\": \"my_output_queue\"," \
+        + "\"connection_string\": \"${connectionString}\"," \
+        + "\"connection_heartbeat_seconds\": \"60\"," \
+        + "\"message_delivery_mode\": \"2\"," \
+        + "\"replyto_ha_policy\": \"all\"," \
+        + "\"replyto_durable\": \"true\"" \
+        + "}"
+}
+
+def getConsumerJSON (String connectionString) {
+    String consumerJSON = "{" \
+        + "\"target_queue\": \"my_output_queue\"," \
+        + "\"connection_string\": \"${connectionString}\"," \
+        + "\"connection_heartbeat_seconds\": \"60\"," \
+        + "\"consumer_tag\": \"my_output_queue_logger-consumer\"," \
+        + "\"num_consumers\": \"5\"," \
+        + "\"cancel_recovery\": \"false\"," \
+        + "\"prefetch_count\": \"1\"," \
+        + "\"replyto_message_delivery_mode\": \"2\"," \
+        + "\"ha_policy\": \"all\"," \
+        + "\"durable\": \"true\"" \
+        + "}"
+}
+
+buildscript {
+        repositories {
+                mavenCentral()
+        }
+
+
+        dependencies {
+                classpath group:'com.github.cycladessoa.nyxlets', name:'servicebroker', version:'latest.integration'
+        }
+}
+
+import org.json.JSONObject
+import org.cyclades.engine.nyxlet.templates.xstroma.target.ConsumerTarget
+import org.cyclades.engine.nyxlet.templates.xstroma.target.ProducerTarget
+import org.cyclades.engine.nyxlet.templates.xstroma.message.api.MessageProcessor
+import org.cyclades.engine.nyxlet.templates.xstroma.message.api.RawMessageProducer
+import org.cyclades.engine.stroma.xstroma.XSTROMARequestBuilder
+import org.cyclades.engine.stroma.xstroma.STROMARequestBuilder
+
+MessageProcessor mp = new MessageProcessor() { 
+    public void process (String message) throws Exception {}
+    public String processAndGetResponse (String message) throws Exception {}
+    public void process (byte[] message) throws Exception {}
+    public byte[] processAndGetResponse (byte[] message) throws Exception {
+        System.out.println(new String(message));
+        return message;
+    }
+}
+
+task rabbitMQConsumerTargetExample () {
+    description = 'An example of how to create a consumer target with Cyclades service broker targets (RabbitMQ must be running)'
+
+    doLast () {
+        long keepAlive = 20000
+        if (rootProject.hasProperty('alive')) keepAlive = Long.parseLong(alive)
+        println ''
+        println "Using alive time of (in milliseconds):  " + keepAlive
+        println 'You can override this value by setting the Gradle command line parameter like this: -Palive=30000'
+        println ''
+
+        javaConsumerTarget(getConsumerJSON(rabbitMQConnectionString), rabbitMQConsumerClass, keepAlive, mp)
+    }
+}
+
+task activeMQConsumerTargetExample () {
+    description = 'An example of how to create a consumer target with Cyclades service broker targets (ActiveMQ must be running)'
+
+    doLast () {
+        long keepAlive = 20000
+        if (rootProject.hasProperty('alive')) keepAlive = Long.parseLong(alive)
+        println ''
+        println "Using alive time of (in milliseconds):  " + keepAlive
+        println 'You can override this value by setting the Gradle command line parameter like this: -Palive=30000'
+        println ''
+
+        javaConsumerTarget(getConsumerJSON(activeMQConnectionString), activeMQConsumerClass, keepAlive, mp)
+    }
+}
+
+def javaConsumerTarget (String consumerJSON, String consumerClass, long keepAlive, MessageProcessor mp) {
+    ConsumerTarget ct = new ConsumerTarget(consumerClass, new JSONObject(consumerJSON), mp)
+    println "Consumer target created...will consume for $keepAlive milliseconds"
+    sleep keepAlive
+    ct.destroy()
+}
+
+task rabbitMQXSTROMAProducerTargetExample () {
+    description = 'An example of how to create an X-STROMA producer target with Cyclades service broker targets (RabbitMQ must be running, must run task "activeMQConsumerTargetExample" first to intialize queues). NOTE: If you produce this message to a queue from which a Cyclades Engine Instance is consuming, this essentially becomes your asynchronous service client.'
+
+    doLast () {
+        XSTROMARequestBuilder xstromaBuilder = XSTROMARequestBuilder.newInstance(null)
+        xstromaBuilder.parameter("transaction-data", "sample-2").parameter("duration", "true")
+        xstromaBuilder.add(STROMARequestBuilder.newInstance("script_engine").parameter("action", "sayhello").parameter("name", "foo").parameter("name", "foo2"))
+        xstromaBuilder.add(STROMARequestBuilder.newInstance("script_engine").parameter("action", "sayhello").parameter("name", "bar").parameter("name", "bar2"))
+        xstromaBuilder.add(STROMARequestBuilder.newInstance("script_engine").parameter("action", "sayhello").parameter("name", "baz").parameter("name", "baz2"))
+        javaProducerTarget(getProducerJSON(rabbitMQConnectionString), rabbitMQProducerClass, xstromaBuilder.xml().build().toString(), false)
+    }
+}
+
+task activeMQXSTROMAProducerTargetExample () {
+    description = 'An example of how to create an X-STROMA producer target with Cyclades service broker targets (ActiveMQ must be running). NOTE: If you produce this message to a queue from which a Cyclades Engine Instance is consuming, this essentially becomes your asynchronous service client.'
+
+    doLast () {
+        XSTROMARequestBuilder xstromaBuilder = XSTROMARequestBuilder.newInstance(null)
+        xstromaBuilder.parameter("transaction-data", "sample-2").parameter("duration", "true")
+        xstromaBuilder.add(STROMARequestBuilder.newInstance("script_engine").parameter("action", "sayhello").parameter("name", "foo").parameter("name", "foo2"))
+        xstromaBuilder.add(STROMARequestBuilder.newInstance("script_engine").parameter("action", "sayhello").parameter("name", "bar").parameter("name", "bar2"))
+        xstromaBuilder.add(STROMARequestBuilder.newInstance("script_engine").parameter("action", "sayhello").parameter("name", "baz").parameter("name", "baz2"))
+        javaProducerTarget(getProducerJSON(activeMQConnectionString), activeMQProducerClass, xstromaBuilder.xml().build().toString(), false)
+    }
+}
+
+task rabbitMQTextProducerTargetExample () {
+    description = 'An example of how to create a text producer target with Cyclades service broker targets (RabbitMQ must be running, must run task "activeMQConsumerTargetExample" first to intialize queues)'
+
+    doLast () {
+        javaProducerTarget(getProducerJSON(rabbitMQConnectionString), rabbitMQProducerClass, "Hello World!", false)
+    }
+}
+
+task activeMQTextProducerTargetExample () {
+    description = 'An example of how to create a text producer target with Cyclades service broker targets (ActiveMQ must be running)'
+
+    doLast () {
+        javaProducerTarget(getProducerJSON(activeMQConnectionString), activeMQProducerClass, "Hello World!", false)
+    }
+}
+
+task rabbitMQBinaryProducerTargetExample () {
+    description = 'An example of how to create a binary producer target with Cyclades service broker targets (RabbitMQ must be running, must run task "activeMQConsumerTargetExample" first to intialize queues)'
+
+    doLast () {
+        javaProducerTarget(getProducerJSON(rabbitMQConnectionString), rabbitMQProducerClass, "Hello World!", true)
+    }
+}
+
+task activeMQBinaryProducerTargetExample () {
+    description = 'An example of how to create a binary producer target with Cyclades service broker targets (ActiveMQ must be running)'
+
+    doLast () {
+        javaProducerTarget(getProducerJSON(activeMQConnectionString), activeMQProducerClass, "Hello World!", true)
+    }
+}
+
+def javaProducerTarget (String producerJSON, String producerClass, String message, boolean useBytes) {
+    ProducerTarget pt = new ProducerTarget(producerClass, new JSONObject(producerJSON))
+    Map messageAttributes = new HashMap<String, List<String>>()
+    // If you wanted the reply (return value of the MessageConsumer) to be inserted into a designated queue
+    //messageAttributes.put("replyto", new ArrayList<String>(Arrays.asList("my_reply_queue")))
+    if (useBytes) {
+        ((RawMessageProducer)pt.getMessageProducer()).sendMessage(message.getBytes(), messageAttributes)
+    } else {
+        ((RawMessageProducer)pt.getMessageProducer()).sendMessage(message, messageAttributes)
+    }
+    pt.destroy()
+}
