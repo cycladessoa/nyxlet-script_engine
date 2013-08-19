@@ -37,8 +37,6 @@ apply plugin: 'checkstyle'
 apply plugin: 'eclipse'
 
 apply from: 'tasks.gradle'
-apply from: 'cyclades_java_client_dsl.gradle'
-apply from: 'cyclades_java_client_servicebroker_targets.gradle'
 
 version = nyxlet_script_engine_version + '.' + build_number
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
@@ -216,6 +214,9 @@ dependencies {
     // compile ... for Build time compilation
     // newConf ... for Build output packaging
     // -------------------------------------------------------------------
+    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.1.6'
+    newConf group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.1.6'
+
 
 }
 
