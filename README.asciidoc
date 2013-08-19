@@ -26,11 +26,13 @@ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISE
 OF THE POSSIBILITY OF SUCH DAMAGE.
 ////////////////////////////////////////////////////////////////////////////////
 
-A Cyclades Service Engine Nyxlet/service for script processing
+A Cyclades Service Engine Nyxlet/service for script processing that allows users to dynamically inject functionality into units of work ranging from a single service request to sophisticated orchestrations
 
 == Basic Features
 
-* Basic XSL processing via XSLT
+* Basic script processing handlers
+    ** General handler supporting the Java SPI mechanism
+    ** General handler specifically implemented and optimized for Groovy
 
 == Overview
 
@@ -57,9 +59,9 @@ This document describes the steps involved for Service (Nyxlet) developers and e
 . Install Tomcat (if you do not already have it): http://tomcat.apache.org (We're running on Tomcat 7) This could be a standard installation on any host, local or remote
 
 . Download and install (extract) a stable version of this repository (the Nyxlet Source Distribution) within a directory of choice (example: "/cycladessoa/nyxlets")
-	.. https://github.com/cycladessoa/nyxlet-xsl/archive/v1.0.0.29.zip (We'll assume the extracted directory is "/cycladessoa/nyxlets/xsl" for our purposes)
+	.. https://github.com/cycladessoa/nyxlet-script_engine/archive/v1.0.0.1.zip (We'll assume the extracted directory is "/cycladessoa/nyxlets/script_engine" for our purposes)
 
-. From within the directory "/cycladessoa/nyxlets/xsl" run the command _gradle clean build_
+. From within the directory "/cycladessoa/nyxlets/script_engine" run the command _gradle clean build_
 
 . The Cyclades Service Engine binary distribution exists within a Nyxlet's workspace _build/libs_ directory after a successful build. This will be in the form of a "cyclades*.war" file. Simply copy this file to your Tomcat installation's "webapps" directory and be sure to name it "cyclades.war".
 
@@ -68,9 +70,9 @@ This document describes the steps involved for Service (Nyxlet) developers and e
 	.. http://localhost:8080/cyclades?action=help (Help page displays without error)
 
 . Deploy the Nyxlet to a running Cyclades Engine Instance
-	.. If running on localhost, simply run the command _gradle deploy_ from within the "/cycladessoa/nyxlets/xsl" directory, by default localhost will be the deployment target
+	.. If running on localhost, simply run the command _gradle deploy_ from within the "/cycladessoa/nyxlets/script_engine" directory, by default localhost will be the deployment target
 	.. If running on another machine, or set of machines, modify your gradle.properties file prior to running the command _gradle deploy_
-		... Modify the "base_engine_url_list" property in "/cycladessoa/nyxlets/xsl/gradle.properties". This can be a comma separated list if deploying to multiple nodes
+		... Modify the "base_engine_url_list" property in "/cycladessoa/nyxlets/script_engine/gradle.properties". This can be a comma separated list if deploying to multiple nodes
 
 .Example non-localhost configuration for two machines
 ----
@@ -88,9 +90,9 @@ base_engine_url_list={"url":"http://server1.mycompany.org:8080/cyclades","passwo
 
 . From within the base directory of your Nyxlet Source Distribution, run the command _./doc_gen.sh . generated_docs_ If you have not previously downloaded and installed the Nyxlet Source Distribution, please do the following before generating the documentation:
 	.. Download and install (extract) a stable version of this repository (the Nyxlet Source Distribution) within a directory of choice (example: "/cycladessoa/nyxlets")
-        	... https://github.com/cycladessoa/nyxlet-xsl/archive/v1.0.0.29.zip (We'll assume the extracted directory is "/cycladessoa/nyxlets/xsl" for our purposes)
+        	... https://github.com/cycladessoa/nyxlet-script_engine/archive/v1.0.0.1.zip (We'll assume the extracted directory is "/cycladessoa/nyxlets/script_engine" for our purposes)
 
-. Open the file "/cycladessoa/nyxlets/xsl/generated_docs/index.html" in a browser window
+. Open the file "/cycladessoa/nyxlets/script_engine/generated_docs/index.html" in a browser window
 
 [NOTE]
 Please keep in mind this is an initial version of the documentation and we will be working on improvements throughout this project.
