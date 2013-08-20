@@ -37,6 +37,7 @@ import org.cyclades.engine.nyxlet.templates.stroma.actionhandler.ActionHandler;
 import org.cyclades.engine.stroma.STROMAResponseWriter;
 import org.cyclades.engine.validator.OneOf;
 import org.cyclades.engine.validator.ParameterHasValue;
+import org.cyclades.engine.validator.ParameterMatches;
 import org.cyclades.io.ResourceRequestUtils;
 
 /**
@@ -109,6 +110,11 @@ public abstract class SimpleScriptActionHandler extends ActionHandler {
         .add(new OneOf()
             .add(new ParameterHasValue(SCRIPT_PARAMETER))
             .add(new ParameterHasValue(SCRIPT_URI_PARAMETER)));
+        
+        if (getParentNyxlet().getExternalProperties().containsKey(PASSWORD)) {
+            getFieldValidators().add(new ParameterMatches(
+                    PASSWORD, getParentNyxlet().getExternalProperties().getProperty(PASSWORD)).showValues(false));
+        }
     }
 
     @Override
@@ -122,5 +128,6 @@ public abstract class SimpleScriptActionHandler extends ActionHandler {
     public static final String INPUT_PARAMETER              = "input";
     public static final String OUTPUT_PARAMETER             = "output";
     public static final String USE_MAP_CHANNEL_PARAMETER    = "use-map-channel";
+    public static final String PASSWORD                     = "password";
 
 }
