@@ -57,7 +57,7 @@ public class GeneralScriptActionHandler extends SimpleScriptActionHandler {
         if (engine == null) throw new Exception("ScriptEngine not found via SPI mechanism: " + 
                 baseParameters.get(SCRIPT_TYPE_PARAMETER).get(0));
         engine.put(INPUT_PARAMETER, scriptInputObject);
-        engine.put(OUTPUT_PARAMETER, null);
+        engine.put(OUTPUT_PARAMETER, "");
         for (String script : scriptList) engine.eval(script);
         return engine.get(OUTPUT_PARAMETER);
     }
